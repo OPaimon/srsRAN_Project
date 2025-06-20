@@ -1,0 +1,48 @@
+name: Build and Publish srsRAN_Project Image
+
+on:
+  push:
+    branches:
+      - main  # 当代码推送到 main 分支时触发
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    # 授予工作流写入 GHCR 的权限
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      # 1. 检出你的仓库代码，这是让 Dockerfile 的 'COPY . .' 生效的前提
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. 登录到 GitHub Container Registry (GHCR)
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 3. 提取元数据，自动为镜像生成合适的标签 (如 latest, git-commit-sha)
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+
+      # 4. 构建镜像并推送到 GHCR，完成“导出”
+      # 这个 action 会自动找到你仓库根目录的 Dockerfile
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # 开启构建缓存，极大加速后续构建速度
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
