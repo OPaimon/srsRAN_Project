@@ -13,7 +13,7 @@ RUN apt-get update && \
     apt-get -y install --no-install-recommends \
     cmake make gcc g++ pkg-config libfftw3-dev libmbedtls-dev \
     libsctp-dev libyaml-cpp-dev libgtest-dev libzmq3-dev \
-    software-properties-common net-tools iputils-ping git && \
+    software-properties-common net-tools iputils-ping git gpg-agent && \
     # 清理apt缓存以减小镜像体积
     rm -rf /var/lib/apt/lists/*
 
